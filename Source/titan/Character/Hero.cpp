@@ -26,6 +26,36 @@ void AHero::BeginPlay()
 	
 }
 
+void AHero::MoveForward(float Value)
+{
+	if (Controller != nullptr && Value != 0.f)
+	{
+		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
+		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X));
+		AddMovementInput(Direction, Value);
+	}
+}
+
+void AHero::MoveRight(float Value)
+{
+	if (Controller != nullptr && Value != 0.f)
+	{
+		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
+		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y));
+		AddMovementInput(Direction, Value);
+	}
+}
+
+void AHero::Turn(float Value)
+{
+	AddControllerYawInput(Value);
+}
+
+void AHero::LookUp(float Value)
+{
+	AddControllerPitchInput(Value);
+}
+
 
 void AHero::Tick(float DeltaTime)
 {
@@ -36,6 +66,12 @@ void AHero::Tick(float DeltaTime)
 void AHero::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+
+	PlayerInputComponent->BindAxis("MoveForward", this, &AHero::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AHero::MoveRight);
+	PlayerInputComponent->BindAxis("Turn", this, &AHero::Turn);
+	PlayerInputComponent->BindAxis("LookUp", this, &AHero::LookUp);
 
 }
 
