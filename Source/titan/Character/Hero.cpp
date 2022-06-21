@@ -8,6 +8,7 @@
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "titan/Weapon/Weapon.h"
+#include "titan/HeroComponents/CombatComponent.h"
 // Sets default values
 AHero::AHero()
 {
@@ -27,6 +28,8 @@ AHero::AHero()
 	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadWidget->SetupAttachment(RootComponent);
 
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	Combat->SetIsReplicated(true);
 }
 
 
@@ -41,7 +44,14 @@ void AHero::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePro
 
 	DOREPLIFETIME_CONDITION(AHero, OverlappingWeapon, COND_OwnerOnly);
 }
-
+void AHero::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (Combat)
+	{
+		Combat->Hero = this;
+	}
+}
 void AHero::MoveForward(float Value)
 {
 	if (Controller != nullptr && Value != 0.f)
@@ -70,6 +80,11 @@ void AHero::Turn(float Value)
 void AHero::LookUp(float Value)
 {
 	AddControllerPitchInput(Value);
+}
+
+void AHero::EquipButtonPressed()
+{
+
 }
 
 void AHero::SetOverlappingWeapon(AWeapon* Weapon)
@@ -118,6 +133,6 @@ void AHero::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("MoveRight", this, &AHero::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AHero::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &AHero::LookUp);
-
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AHero::EquipButtonPressed);
 }
 
