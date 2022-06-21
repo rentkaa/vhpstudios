@@ -2,6 +2,9 @@
 
 #include "Weapon.h"
 #include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
+#include "titan/Character/Hero.h"
+
 
 AWeapon::AWeapon()
 {
@@ -25,6 +28,9 @@ AWeapon::AWeapon()
 	//set collisions on the server
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	Pickupwidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
+	Pickupwidget->SetupAttachment(RootComponent);
+
 }
 void AWeapon::BeginPlay()
 {
@@ -33,8 +39,21 @@ void AWeapon::BeginPlay()
 	{
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
+	}
+	if (Pickupwidget) {
+		Pickupwidget->SetVisibility(false);
 	}
 	
+	
+}
+void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	AHero* Hero = Cast<AHero>(OtherActor);
+	if (Hero && Pickupwidget)
+	{
+		Pickupwidget->SetVisibility(true);
+	}
 }
 void AWeapon::Tick(float DeltaTime)
 {
