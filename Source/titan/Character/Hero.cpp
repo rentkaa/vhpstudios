@@ -84,7 +84,12 @@ void AHero::LookUp(float Value)
 
 void AHero::EquipButtonPressed()
 {
-
+	{
+		if (Combat && HasAuthority())
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+	}
 }
 
 void AHero::SetOverlappingWeapon(AWeapon* Weapon)

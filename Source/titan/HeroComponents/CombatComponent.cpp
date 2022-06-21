@@ -1,7 +1,8 @@
 
 #include "CombatComponent.h"
 #include "titan/Weapon/Weapon.h"
-
+#include "titan/Character/Hero.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -25,6 +26,16 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
-	if (Hero == nullptr) || WeaponToEquip == nullptr) return;
+	if (Hero == nullptr || WeaponToEquip == nullptr) return;
+	EquippedWeapon = WeaponToEquip;
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	const USkeletalMeshSocket* HandSocket = Hero->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	if (HandSocket)
+	{
+		HandSocket->AttachActor(EquippedWeapon, Hero->GetMesh());
+	}
+	EquippedWeapon->SetOwner(Hero);
+	EquippedWeapon->ShowPickupWidget(false);
 }
+
 
