@@ -96,6 +96,22 @@ void AHero::CrouchButtonPressed()
 	}
 }
 
+void AHero::AimButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->SetAiming(true);
+	}
+}
+
+void AHero::AimButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->SetAiming(false);
+	}
+}
+
 void AHero::EquipButtonPressed()
 {
 
@@ -153,6 +169,13 @@ void AHero::ServerEquipButtonPressed_Implementation()
 bool AHero::IsWeaponEquipped() {
 	return(Combat && Combat->EquippedWeapon);
 }
+bool AHero::IsAiming()
+{
+	return (Combat && Combat->bAiming);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 void AHero::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -170,5 +193,7 @@ void AHero::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("LookUp", this, &AHero::LookUp);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AHero::EquipButtonPressed);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AHero::CrouchButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AHero::AimButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AHero::AimButtonReleased);
 }
 

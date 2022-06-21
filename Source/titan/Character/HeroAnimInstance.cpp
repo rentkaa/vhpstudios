@@ -32,5 +32,7 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	bIsCrouched = Hero->bIsCrouched;
 
+	bAiming = Hero->IsAiming();
+
 }
 
