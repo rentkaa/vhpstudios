@@ -30,6 +30,8 @@ AHero::AHero()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 
@@ -80,6 +82,18 @@ void AHero::Turn(float Value)
 void AHero::LookUp(float Value)
 {
 	AddControllerPitchInput(Value);
+}
+
+void AHero::CrouchButtonPressed()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch();
+	}
 }
 
 void AHero::EquipButtonPressed()
@@ -155,5 +169,6 @@ void AHero::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("Turn", this, &AHero::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &AHero::LookUp);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &AHero::EquipButtonPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AHero::CrouchButtonPressed);
 }
 
