@@ -84,12 +84,19 @@ void AHero::LookUp(float Value)
 
 void AHero::EquipButtonPressed()
 {
+
+	if (Combat)
 	{
-		if (Combat && HasAuthority())
+		if (HasAuthority()) 
 		{
 			Combat->EquipWeapon(OverlappingWeapon);
 		}
+		else
+		{
+			ServerEquipButtonPressed();
+		}
 	}
+
 }
 
 void AHero::SetOverlappingWeapon(AWeapon* Weapon)
@@ -122,7 +129,16 @@ void AHero::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 		LastWeapon->ShowPickupWidget(false);
 	}
 }
-
+void AHero::ServerEquipButtonPressed_Implementation()
+{
+	if (Combat)
+	{
+		Combat->EquipWeapon(OverlappingWeapon);
+	}
+}
+bool AHero::IsWeaponEquipped() {
+	return(Combat && Combat->EquippedWeapon);
+}
 void AHero::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

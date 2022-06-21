@@ -13,6 +13,7 @@ class TITAN_API UCombatComponent : public UActorComponent
 public:	
 	UCombatComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	friend class AHero;
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
@@ -23,6 +24,7 @@ public:
 	
 private:
 	class AHero* Hero;
+	UPROPERTY(Replicated)
 	class AWeapon* EquippedWeapon;
 		
 };
