@@ -59,6 +59,7 @@ private:
 
 	float AO_Yaw;
 	float AO_Pitch;
+	float InterpAO_Yaw;
 	FRotator StartingAimRotation;
 
 
