@@ -5,6 +5,7 @@
 #include "Hero.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "titan/Weapon/Weapon.h"
 
 void UHeroAnimInstance::NativeInitializeAnimation()
 {
@@ -30,6 +31,7 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bIsAccelerating = Hero->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
 
 	bWeaponEquipped = Hero->IsWeaponEquipped();
+	EquippedWeapon = Hero->GetEquippedWeapon();
 
 	bIsCrouched = Hero->bIsCrouched;
 
@@ -52,5 +54,15 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	AO_Yaw = Hero->GetAO_Yaw();
 	AO_Pitch = Hero->GetAO_Pitch();
+
+	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && Hero->GetMesh())
+	{
+		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
+		FVector OutPosition;
+		FRotator OutRotation;
+		Hero->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
+		LeftHandTransform.SetLocation(OutPosition);
+		LeftHandTransform.SetRotation(FQuat(OutRotation));
+	}
 }
 
