@@ -37,6 +37,8 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	bAiming = Hero->IsAiming();
 
+	TurningInPlace = Hero->GetTurningInPlace();
+
 
 	//offset yaw for the strafing function
 	FRotator AimRotation = Hero->GetBaseAimRotation();
