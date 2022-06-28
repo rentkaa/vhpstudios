@@ -34,6 +34,8 @@ AHero::AHero()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	NetUpdateFrequency = 66.f;
+	MinNetUpdateFrequency = 33.f;
 }
 
 
@@ -175,6 +177,21 @@ void AHero::AimOffset(float DeltaTime)
 	}
 }
 
+
+/// DO THIS FOR SPRINTING WHEN READY
+/// </summary>
+void AHero::Jump()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Super::Jump();
+	}
+}
+
 void AHero::EquipButtonPressed()
 {
 
@@ -256,7 +273,7 @@ void AHero::Tick(float DeltaTime)
 void AHero::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AHero::Jump);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AHero::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AHero::MoveRight);
