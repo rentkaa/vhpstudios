@@ -208,6 +208,21 @@ void AHero::EquipButtonPressed()
 	}
 
 }
+void AHero::FireButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(true);
+	}
+}
+
+void AHero::FireButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
+}
 
 
 void AHero::SetOverlappingWeapon(AWeapon* Weapon)
@@ -283,5 +298,7 @@ void AHero::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AHero::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AHero::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &AHero::AimButtonReleased);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AHero::FireButtonPressed);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AHero::FireButtonReleased);
 }
 

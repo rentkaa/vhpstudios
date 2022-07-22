@@ -63,6 +63,14 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 }
+void UCombatComponent::FireButtonPressed(bool bPressed)
+{
+	bFireButtonPressed = bPressed;
+	if (Character && bFireButtonPressed)
+	{
+		Character->PlayFireMontage(bAiming);
+	}
+}
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
