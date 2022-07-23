@@ -66,9 +66,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
 	bFireButtonPressed = bPressed;
-	if (Character && bFireButtonPressed)
+	if (Hero && bFireButtonPressed)
 	{
-		Character->PlayFireMontage(bAiming);
 	}
 }
 
