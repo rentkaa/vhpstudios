@@ -20,6 +20,7 @@ public:
 	//we need to override this function to replicate variables
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	void PlayFireMontage(bool bAiming);
 
 protected:
 
@@ -69,6 +70,11 @@ private:
 	ETurningInPlace TurningInPlace;
 
 	void TurnInplace(float DeltaTime);
+
+	//montage variables
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* FireWeaponMontage;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);

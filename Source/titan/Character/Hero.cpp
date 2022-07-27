@@ -10,6 +10,7 @@
 #include "titan/Weapon/Weapon.h"
 #include "titan/HeroComponents/CombatComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "titan/Character/HeroAnimInstance.h"
 // Sets default values
 AHero::AHero()
 {
@@ -57,6 +58,19 @@ void AHero::PostInitializeComponents()
 	{
 		Combat->Hero = this;
 	}
+}
+void AHero::PlayFireMontage(bool bAiming)
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && FireWeaponMontage) {
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName;
+		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+
 }
 void AHero::MoveForward(float Value)
 {
