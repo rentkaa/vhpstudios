@@ -10,6 +10,7 @@
 #include "DrawDebugHelpers.h"
 #include "titan/PlayerController/HeroPlayerController.h"
 #include "titan/HUD/HeroHUD.h"
+#include "Camera/CameraComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -26,6 +27,11 @@ void UCombatComponent::BeginPlay()
 	if (Hero)
 	{
 		Hero->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+
+		if (Hero->GetFollowCamera()) {
+			DefaultFOV = Hero->GetFollowCamera()->FieldOfView;
+			CurrentFOV = DefaultFOV;
+		}
 	}
 
 }
@@ -59,11 +65,14 @@ void UCombatComponent::OnRep_EquippedWeapon()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	SetHUDCrosshairs(DeltaTime);
+	
 	if (Hero && Hero->IsLocallyControlled()) {
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
 		HitTarget = HitResult.ImpactPoint;
+
+		InterpFOV(DeltaTime);
+		SetHUDCrosshairs(DeltaTime);
 	}
 }
 
@@ -110,11 +119,40 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.);
 			}
 
-			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
+			if (bAiming) {
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.58f, DeltaTime, 30.f);
+			}
+			else {
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.f, DeltaTime, 30.f);
+			}
+
+			CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.f, DeltaTime, 40.f);
+			HUDPackage.CrosshairSpread = 
+				.5f +
+				CrosshairVelocityFactor + 
+				CrosshairInAirFactor - 
+				CrosshairAimFactor +
+				CrosshairShootingFactor;
 			HUD->SetHUDPackage(HUDPackage);
 		}
 	}
 }
+void UCombatComponent::InterpFOV(float DeltaTime)
+{
+	if (EquippedWeapon == nullptr) return;
+
+	if (bAiming) {
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, EquippedWeapon->GetZoomedFOV(), DeltaTime, EquippedWeapon->GetZoomInterpSpeed());
+	}
+	else {
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomInterpSpeed);
+	}
+	if (Hero && Hero->GetFollowCamera()) {
+		Hero->GetFollowCamera()->SetFieldOfView(CurrentFOV);
+	}
+}
+
+
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -130,6 +168,10 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
 		ServerFire(HitResult.ImpactPoint);
+
+		if (EquippedWeapon) {
+			CrosshairShootingFactor = .75f;
+		}
 	}
 
 }
