@@ -8,6 +8,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "titan/PlayerController/HeroPlayerController.h"
+#include "titan/HUD/HeroHUD.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -57,7 +59,37 @@ void UCombatComponent::OnRep_EquippedWeapon()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	SetHUDCrosshairs(DeltaTime);
 	
+}
+
+void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
+{
+	if (Hero == nullptr || Hero->Controller == nullptr) return;
+	//set the controller equal to itself unless its null, if its null cast to a new controller
+	Controller = Controller == nullptr ? Cast<AHeroPlayerController>(Hero->Controller) : Controller;
+	if (Controller) {
+		HUD = HUD == nullptr ? Cast<AHeroHUD>(Controller->GetHUD()) : HUD;
+		if (HUD) {
+			FHUDPackage HUDPackage;
+			if (EquippedWeapon) {
+				HUDPackage.CrosshairsBottom = EquippedWeapon->CrosshairsBottom;
+				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
+				HUDPackage.CrosshairsRight = EquippedWeapon->CrosshairsRight;
+				HUDPackage.CrosshairsTop = EquippedWeapon->CrosshairsTop;
+				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
+			}
+			else {
+				
+				HUDPackage.CrosshairsBottom = nullptr;
+				HUDPackage.CrosshairsLeft = nullptr;
+				HUDPackage.CrosshairsRight = nullptr;
+				HUDPackage.CrosshairsTop = nullptr;
+				HUDPackage.CrosshairsCenter = nullptr;
+			}
+			HUD->SetHUDPackage(HUDPackage);
+		}
+	}
 }
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -108,6 +140,8 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		);
 	}
 }
+
+
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) {
 

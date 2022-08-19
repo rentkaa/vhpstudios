@@ -6,6 +6,17 @@
 #include "GameFramework/HUD.h"
 #include "HeroHUD.generated.h"
 
+USTRUCT(BlueprintType)
+struct FHUDPackage {
+
+	GENERATED_BODY()
+public:
+	class UTexture2D* CrosshairsCenter;
+	UTexture2D* CrosshairsLeft;
+	UTexture2D* CrosshairsRight;
+	UTexture2D* CrosshairsTop;
+	UTexture2D* CrosshairsBottom;
+};
 /**
  * 
  */
@@ -14,5 +25,10 @@ class TITAN_API AHeroHUD : public AHUD
 {
 	GENERATED_BODY()
 public:
+	virtual void DrawHUD() override;
+private:
+	FHUDPackage HUDPackage;
 
+public:
+	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
 };

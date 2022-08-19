@@ -2,3 +2,9 @@
 
 
 #include "HeroHUD.h"
+
+void AHeroHUD::DrawHUD() {
+
+	Super::DrawHUD();
+	
+}
