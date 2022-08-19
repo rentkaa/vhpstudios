@@ -26,7 +26,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool PickupWidget);
-	void Fire();
+	//overridable fire function
+	virtual void Fire(const FVector& HitTarget);
 
 protected:
 	virtual void BeginPlay() override;
@@ -66,6 +67,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	class UAnimationAsset* FireAnimation;
+
+	/*
+		TEXTURES FOR THE WEAPON CROSSHAIRS
+	*/
 
 public:	
 	void SetWeaponState(EWeaponState State);
