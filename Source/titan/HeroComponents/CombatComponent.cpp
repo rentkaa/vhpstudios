@@ -9,7 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "titan/PlayerController/HeroPlayerController.h"
-#include "titan/HUD/HeroHUD.h"
+//#include "titan/HUD/HeroHUD.h"
 #include "Camera/CameraComponent.h"
 
 UCombatComponent::UCombatComponent()
@@ -84,7 +84,7 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 	if (Controller) {
 		HUD = HUD == nullptr ? Cast<AHeroHUD>(Controller->GetHUD()) : HUD;
 		if (HUD) {
-			FHUDPackage HUDPackage;
+			
 			if (EquippedWeapon) {
 				HUDPackage.CrosshairsBottom = EquippedWeapon->CrosshairsBottom;
 				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
@@ -170,7 +170,7 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 		ServerFire(HitResult.ImpactPoint);
 
 		if (EquippedWeapon) {
-			CrosshairShootingFactor = .75f;
+			CrosshairShootingFactor = 2.0f;
 		}
 	}
 
@@ -196,6 +196,11 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	if (bScreenToWorld) {
 		FVector Start = CrosshairWorldPosition;
 
+		if (Hero) {
+			float DistanceToCharacter = (Hero->GetActorLocation() - Start).Size();
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
+		}
+
 		FVector End = Start + CrosshairWorldDirection * 80000.f;
 
 		GetWorld()->LineTraceSingleByChannel(
@@ -204,6 +209,13 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			End,
 			ECollisionChannel::ECC_Visibility
 		);
+		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UInteractWithCrosshairsInterface>()) {
+			
+			HUDPackage.CrosshairsColor = FLinearColor::Red;
+		}
+		else {
+			HUDPackage.CrosshairsColor = FLinearColor::White;
+		}
 	}
 }
 

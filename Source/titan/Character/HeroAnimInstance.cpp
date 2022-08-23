@@ -39,6 +39,8 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	TurningInPlace = Hero->GetTurningInPlace();
 
+	bRotateRootBone = Hero->ShouldRotateRootBone();
+
 
 	//offset yaw for the strafing function
 	FRotator AimRotation = Hero->GetBaseAimRotation();
@@ -69,7 +71,8 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		if (Hero->IsLocallyControlled()) {
 			bLocallyControlled = true;
 			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), ERelativeTransformSpace::RTS_World);
-			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - Hero->GetHitTarget()));
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - Hero->GetHitTarget()));
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 30.f);
 
 		}
 		

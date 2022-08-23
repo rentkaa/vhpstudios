@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "titan/HUD/HeroHUD.h"
 #include "CombatComponent.generated.h"
 
 
@@ -62,9 +63,12 @@ private:
 	/*
 		HUD and crosshars
 	*/
+	FHUDPackage HUDPackage;
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
 	float CrosshairAimFactor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float CrosshairShootingFactor;
 
 	FVector HitTarget;
