@@ -9,7 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "titan/PlayerController/HeroPlayerController.h"
-//#include "titan/HUD/HeroHUD.h"
+#include "TimerManager.h"
 #include "Camera/CameraComponent.h"
 
 UCombatComponent::UCombatComponent()
@@ -20,7 +20,13 @@ UCombatComponent::UCombatComponent()
 	AimWalkSpeed = 450.f;
 
 }
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, bAiming);
+}
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -35,6 +41,59 @@ void UCombatComponent::BeginPlay()
 	}
 
 }
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (Hero && Hero->IsLocallyControlled()) {
+		FHitResult HitResult;
+		TraceUnderCrosshairs(HitResult);
+		HitTarget = HitResult.ImpactPoint;
+		SetHUDCrosshairs(DeltaTime);
+		InterpFOV(DeltaTime);
+		
+	}
+}
+void UCombatComponent::FireButtonPressed(bool bPressed)
+{	//client controlled boolean
+	bFireButtonPressed = bPressed;
+
+	if (bFireButtonPressed) {
+		Fire();
+	}
+
+}
+void UCombatComponent::Fire()
+{
+	if (bCanFire) {
+	
+		ServerFire(HitTarget);
+		if (EquippedWeapon) {
+			CrosshairShootingFactor = .75f;
+		}
+		StartFireTimer();
+	}
+}
+void UCombatComponent::StartFireTimer()
+{
+	if (EquippedWeapon == nullptr || Hero == nullptr) return;
+	bCanFire = false;
+	Hero->GetWorldTimerManager().SetTimer(
+		FireTimer,
+		this,
+		&UCombatComponent::FireTimerFinished,
+		EquippedWeapon->FireDelay
+	);
+}
+void UCombatComponent::FireTimerFinished()
+{
+	if (EquippedWeapon == nullptr) return;
+	bCanFire = true;
+	if (bFireButtonPressed && EquippedWeapon->bAutomatic) {
+		Fire();
+	}
+}
+
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
 	bAiming = bIsAiming;
@@ -62,19 +121,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	if (Hero && Hero->IsLocallyControlled()) {
-		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult);
-		HitTarget = HitResult.ImpactPoint;
 
-		InterpFOV(DeltaTime);
-		SetHUDCrosshairs(DeltaTime);
-	}
-}
 
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
@@ -137,6 +184,8 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 		}
 	}
 }
+
+
 void UCombatComponent::InterpFOV(float DeltaTime)
 {
 	if (EquippedWeapon == nullptr) return;
@@ -153,28 +202,9 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 }
 
 
-void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
-	DOREPLIFETIME(UCombatComponent, bAiming);
-}
-void UCombatComponent::FireButtonPressed(bool bPressed)
-{	//client controlled boolean
-	bFireButtonPressed = bPressed;
 
-	if (bFireButtonPressed) {
-		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult);
-		ServerFire(HitResult.ImpactPoint);
 
-		if (EquippedWeapon) {
-			CrosshairShootingFactor = 2.0f;
-		}
-	}
-
-}
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 {
 	//to trace we need to get the screen resulution
@@ -218,9 +248,6 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		}
 	}
 }
-
-
-
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) {
 
 	MulticastFire(TraceHitTarget);
@@ -234,7 +261,6 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 		EquippedWeapon->Fire(TraceHitTarget);
 	}
 }
-
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Hero == nullptr || WeaponToEquip == nullptr) return;

@@ -30,6 +30,8 @@ protected:
 
 	void FireButtonPressed(bool bPressed);
 
+	void Fire();
+
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
@@ -43,6 +45,8 @@ protected:
 public:	
 	
 private:
+
+
 	class AHero* Hero;
 	class AHeroPlayerController* Controller;
 	class AHeroHUD* HUD;
@@ -67,6 +71,17 @@ private:
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
 	float CrosshairAimFactor;
+
+
+	/// <summary>
+	/// Automatic Fire
+	/// </summary>
+	FTimerHandle FireTimer;
+
+	bool bCanFire = true;
+
+	void StartFireTimer();
+	void FireTimerFinished();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float CrosshairShootingFactor;

@@ -237,17 +237,20 @@ void AHero::SimProxiesTurn()
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 	bRotateRootBone = false;
 	float Speed = CalculateSpeed();
-	if (Speed > 0.f) {
+	if (Speed > 0.f)
+	{
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 		return;
 	}
 
-	
 	ProxyRotationLastFrame = ProxyRotation;
 	ProxyRotation = GetActorRotation();
 	ProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
 
-	if (FMath::Abs(ProxyYaw) > TurnThreshold) {
+	UE_LOG(LogTemp, Warning, TEXT("ProxyYaw: %f"), ProxyYaw);
+
+	if (FMath::Abs(ProxyYaw) > TurnThreshold)
+	{
 		if (ProxyYaw > TurnThreshold)
 		{
 			TurningInPlace = ETurningInPlace::ETIP_Right;
@@ -263,6 +266,7 @@ void AHero::SimProxiesTurn()
 		return;
 	}
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+
 }
 
 
@@ -407,11 +411,13 @@ void AHero::Tick(float DeltaTime)
 	else
 	{
 		TimeSinceLastMovementReplication += DeltaTime;
-		if (TimeSinceLastMovementReplication > .25f) {
+		if (TimeSinceLastMovementReplication > 0.25f)
+		{
 			OnRep_ReplicatedMovement();
 		}
 		CalculateAO_Pitch();
 	}
+
 
 	HideCameraIfCharacterClose();
 
