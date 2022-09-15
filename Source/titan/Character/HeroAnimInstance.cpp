@@ -41,6 +41,8 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	bRotateRootBone = Hero->ShouldRotateRootBone();
 
+	bEliminated = Hero->IsEliminated();
+
 
 	//offset yaw for the strafing function
 	FRotator AimRotation = Hero->GetBaseAimRotation();

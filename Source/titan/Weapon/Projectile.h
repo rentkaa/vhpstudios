@@ -21,6 +21,9 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UPROPERTY(EditAnywhere)
+		float Damage = 7.f;
+
 public:	
 	virtual void Tick(float DeltaTime) override;
 
@@ -40,5 +43,7 @@ private:
 	UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* ImpactSound;;
+	class USoundCue* ImpactSound;
+
+	
 };

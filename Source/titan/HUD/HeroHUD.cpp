@@ -2,6 +2,8 @@
 
 
 #include "HeroHUD.h"
+#include "GameFramework/PlayerController.h"
+#include "CharacterOverlay.h"
 
 void AHeroHUD::DrawHUD() {
 
@@ -34,6 +36,23 @@ void AHeroHUD::DrawHUD() {
 		}
 	}
 	
+}
+
+void AHeroHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AddCharacterOVerlay();
+}
+
+void AHeroHUD::AddCharacterOVerlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && CharacterOverlayClass) {
+		
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
+	}
 }
 
 void AHeroHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread, FLinearColor CrosshairColor)

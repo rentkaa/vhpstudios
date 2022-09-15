@@ -22,16 +22,23 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayElimMontage();
 
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
+	
 
 	virtual void OnRep_ReplicatedMovement() override;
-
+public:
+	//just on the server
+	void Elim();
+	//create a function on the player character that gets called on the localplayer's machine whenever the player is eliminated
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
 protected:
 
 	virtual void BeginPlay() override;
+
+	void UpdateHUDHealth();
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -48,6 +55,9 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void PlayHitReactMontage();
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -89,6 +99,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ElimMontage;
 	
 
 	void HideCameraIfCharacterClose();
@@ -104,6 +116,29 @@ private:
 	float TimeSinceLastMovementReplication;
 	float CalculateSpeed();
 
+	/*
+		Player Health
+	*/
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 200.f;
+	
+	UPROPERTY(ReplicatedUsing = OnREp_Health, VisibleAnywhere, Category = "Player Stats")
+	float Health = 200.f;
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	class AHeroPlayerController* HeroPlayerController;
+
+	bool bEliminated = false;
+
+	FTimerHandle ElimTimer;
+	void ElimTimerFinished();
+
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay = 3.f;
+
+
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -115,4 +150,5 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsEliminated() const { return bEliminated; }
 };

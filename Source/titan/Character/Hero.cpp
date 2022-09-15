@@ -13,6 +13,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "titan/titan.h"
 #include "titan/Character/HeroAnimInstance.h"
+#include "titan/GameMode/TitanGameMode.h"
+#include "TimerManager.h"
+#include "titan/PlayerController/HeroPlayerController.h"
 // Sets default values
 AHero::AHero()
 {
@@ -50,6 +53,33 @@ AHero::AHero()
 	MinNetUpdateFrequency = 33.f;
 }
 
+void AHero::MulticastElim_Implementation() {
+	//set the eliminated boolean for the animation blueprint first right before we play the eliminationmontage
+	bEliminated = true;
+	PlayElimMontage();
+}
+
+//STILL CALL THIS ONE FROM THE GAMEMODE AS THE GAMEMODEONLY EXISTS ON THE SERVER
+void AHero::Elim() 
+{
+	MulticastElim();
+	//At the end of elimdelay, the character WILL call elimtimerfinished
+	GetWorldTimerManager().SetTimer(
+		ElimTimer,
+		this,
+		&AHero::ElimTimerFinished,
+		ElimDelay
+	);
+}
+
+void AHero::ElimTimerFinished()
+{
+	ATitanGameMode* TitanGameMode = GetWorld()->GetAuthGameMode<ATitanGameMode>();
+	if (TitanGameMode) {
+		TitanGameMode->RequestRespawn(this, Controller);
+	}
+}
+
 
 void AHero::OnRep_ReplicatedMovement()
 {
@@ -61,13 +91,25 @@ void AHero::OnRep_ReplicatedMovement()
 void AHero::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	UpdateHUDHealth();
+	if (HasAuthority()) {
+		OnTakeAnyDamage.AddDynamic(this, &AHero::ReceiveDamage);
+	}
+}
+void AHero::UpdateHUDHealth()
+{
+	HeroPlayerController = HeroPlayerController == nullptr ? Cast<AHeroPlayerController>(Controller) : HeroPlayerController;
+
+	if (HeroPlayerController) {
+		HeroPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 }
 void AHero::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(AHero, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME(AHero, Health);
 }
 void AHero::PostInitializeComponents()
 {
@@ -90,6 +132,14 @@ void AHero::PlayFireMontage(bool bAiming)
 	}
 
 }
+
+void AHero::PlayElimMontage() 
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ElimMontage) {
+		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
 void AHero::PlayHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
@@ -101,6 +151,30 @@ void AHero::PlayHitReactMontage()
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
+void AHero::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+
+	if (Health == 0.f) {
+		//get the gamemode and store it into a gamemode type pointer, and wrap that bitch in an if check to see if the health 0
+		GetWorld()->GetAuthGameMode<ATitanGameMode>();
+		ATitanGameMode* TitanGameMode = GetWorld()->GetAuthGameMode<ATitanGameMode>();
+
+		if (TitanGameMode) {
+			//call the player eliminated function from the gamemode 
+			//we a player controller, so if there currently is not one, cast Controller to our playercontroller, if not then set it as itself
+			HeroPlayerController = HeroPlayerController == nullptr ? Cast<AHeroPlayerController>(Controller) : HeroPlayerController;
+			//get the instigator controller and cast it to a heroplayercontroller
+			AHeroPlayerController* AttackerController = Cast<AHeroPlayerController>(InstigatorController);
+			TitanGameMode->PlayerEliminated(this, HeroPlayerController, AttackerController);
+		}
+	}
+
+}
+
+
 void AHero::MoveForward(float Value)
 {
 	if (Controller != nullptr && Value != 0.f)
@@ -317,11 +391,6 @@ void AHero::FireButtonReleased()
 }
 
 
-void AHero::MulticastHit_Implementation()
-{
-	PlayHitReactMontage();
-}
-
 void AHero::HideCameraIfCharacterClose()
 {
 	if (!IsLocallyControlled()) return;
@@ -342,6 +411,14 @@ void AHero::HideCameraIfCharacterClose()
 		}
 	}
 }
+
+void AHero::OnRep_Health()
+{
+	//play the hit react montage when health gets replicated
+	PlayHitReactMontage();
+	UpdateHUDHealth();
+}
+
 
 void AHero::SetOverlappingWeapon(AWeapon* Weapon)
 {
